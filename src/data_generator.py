@@ -10,6 +10,8 @@ from __future__ import annotations
 import random
 from typing import Iterable, Iterator, List, Sequence, Tuple, TypeVar
 
+import numpy as np
+
 T = TypeVar("T")
 
 
@@ -65,3 +67,37 @@ def expand_camera_samples(
             )
         )
     return tuple(expanded)
+
+
+def indexed_batch_generator(
+    samples: Sequence[T],
+    batch_size: int = 32,
+    *,
+    shuffle: bool = False,
+    seed: int = 0,
+    drop_last: bool = False,
+) -> Iterator[Tuple[T, ...]]:
+    """Yield batches by permuting NumPy indices instead of sample values.
+
+    This alternative is useful when the source is an indexable array-like
+    object: only integer indices are rearranged, while the source values are
+    fetched when each batch is formed.
+    """
+
+    if not isinstance(batch_size, int) or isinstance(batch_size, bool):
+        raise TypeError("batch_size must be an integer")
+    if batch_size <= 0:
+        raise ValueError("batch_size must be positive")
+    if not isinstance(seed, int) or isinstance(seed, bool):
+        raise TypeError("seed must be an integer")
+
+    items = tuple(samples)
+    indices = np.arange(len(items), dtype=np.int64)
+    if shuffle:
+        indices = np.random.default_rng(seed).permutation(indices)
+
+    for offset in range(0, len(indices), batch_size):
+        batch_indices = indices[offset : offset + batch_size]
+        if drop_last and len(batch_indices) < batch_size:
+            break
+        yield tuple(items[int(index)] for index in batch_indices)

@@ -1,6 +1,10 @@
 import unittest
 
-from src.data_generator import batch_generator, expand_camera_samples
+from src.data_generator import (
+    batch_generator,
+    expand_camera_samples,
+    indexed_batch_generator,
+)
 
 
 class BatchGeneratorCharacterizationTests(unittest.TestCase):
@@ -29,6 +33,22 @@ class BatchGeneratorCharacterizationTests(unittest.TestCase):
                 ("right.jpg", -0.1, "right"),
             ),
         )
+
+    def test_indexed_implementation_is_deterministic_and_complete(self):
+        samples = tuple(range(9))
+
+        first = list(indexed_batch_generator(samples, 4, shuffle=True, seed=11))
+        second = list(indexed_batch_generator(samples, 4, shuffle=True, seed=11))
+
+        self.assertEqual(first, second)
+        self.assertEqual(sorted(value for batch in first for value in batch), list(samples))
+
+    def test_two_implementations_have_the_same_batch_shape(self):
+        samples = tuple("abcdefg")
+        reference = list(batch_generator(samples, 3, shuffle=False))
+        alternative = list(indexed_batch_generator(samples, 3, shuffle=False))
+
+        self.assertEqual(alternative, reference)
 
 
 if __name__ == "__main__":
