@@ -1,5 +1,7 @@
 import unittest
 
+import numpy as np
+
 from src.data_generator import (
     batch_generator,
     expand_camera_samples,
@@ -42,6 +44,22 @@ class BatchGeneratorCharacterizationTests(unittest.TestCase):
 
         self.assertEqual(first, second)
         self.assertEqual(sorted(value for batch in first for value in batch), list(samples))
+
+    def test_indexed_implementation_drops_only_the_short_batch(self):
+        samples = tuple(range(7))
+
+        batches = list(indexed_batch_generator(samples, 3, drop_last=True))
+
+        self.assertEqual(batches, [(0, 1, 2), (3, 4, 5)])
+
+    def test_indexed_shuffle_does_not_change_global_numpy_state(self):
+        np.random.seed(17)
+        expected = np.random.random(3)
+        np.random.seed(17)
+
+        list(indexed_batch_generator(tuple(range(8)), 2, shuffle=True, seed=5))
+
+        np.testing.assert_array_equal(np.random.random(3), expected)
 
     def test_two_implementations_have_the_same_batch_shape(self):
         samples = tuple("abcdefg")
