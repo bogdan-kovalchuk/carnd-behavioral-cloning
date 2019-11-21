@@ -8,11 +8,31 @@ without importing the training stack from ``model.py``.
 from __future__ import annotations
 
 import random
+import math
+from numbers import Integral, Real
 from typing import Iterable, Iterator, List, Sequence, Tuple, TypeVar
 
 import numpy as np
 
 T = TypeVar("T")
+
+
+def _validate_batch_arguments(batch_size: int, seed: int) -> None:
+    if not isinstance(batch_size, Integral) or isinstance(batch_size, bool):
+        raise TypeError("batch_size must be an integer")
+    if batch_size <= 0:
+        raise ValueError("batch_size must be positive")
+    if not isinstance(seed, Integral) or isinstance(seed, bool):
+        raise TypeError("seed must be an integer")
+
+
+def _finite_real(value: Real, name: str) -> float:
+    if isinstance(value, bool) or not isinstance(value, Real):
+        raise TypeError("{} must be a real number".format(name))
+    number = float(value)
+    if not math.isfinite(number):
+        raise ValueError("{} must be finite".format(name))
+    return number
 
 
 def batch_generator(
@@ -31,12 +51,7 @@ def batch_generator(
     calls with the same seed reproducible.
     """
 
-    if not isinstance(batch_size, int) or isinstance(batch_size, bool):
-        raise TypeError("batch_size must be an integer")
-    if batch_size <= 0:
-        raise ValueError("batch_size must be positive")
-    if not isinstance(seed, int) or isinstance(seed, bool):
-        raise TypeError("seed must be an integer")
+    _validate_batch_arguments(batch_size, seed)
 
     ordered: List[T] = list(samples)
     if shuffle:
@@ -55,10 +70,13 @@ def expand_camera_samples(
 ) -> Tuple[Tuple[str, float, str], ...]:
     """Expand driving-log rows into center, left, and right camera records."""
 
+    correction = _finite_real(correction, "correction")
     expanded = []
     for row in rows:
+        if len(row) < 4:
+            raise ValueError("each row needs four camera fields")
         center, left, right, angle = row[:4]
-        center_angle = float(angle)
+        center_angle = _finite_real(float(angle), "steering angle")
         expanded.extend(
             (
                 (center, center_angle, "center"),
@@ -84,12 +102,7 @@ def indexed_batch_generator(
     fetched when each batch is formed.
     """
 
-    if not isinstance(batch_size, int) or isinstance(batch_size, bool):
-        raise TypeError("batch_size must be an integer")
-    if batch_size <= 0:
-        raise ValueError("batch_size must be positive")
-    if not isinstance(seed, int) or isinstance(seed, bool):
-        raise TypeError("seed must be an integer")
+    _validate_batch_arguments(batch_size, seed)
 
     items = tuple(samples)
     indices = np.arange(len(items), dtype=np.int64)

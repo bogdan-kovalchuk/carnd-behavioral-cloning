@@ -68,6 +68,22 @@ class BatchGeneratorCharacterizationTests(unittest.TestCase):
 
         self.assertEqual(alternative, reference)
 
+    def test_invalid_batch_sizes_and_seeds_are_rejected(self):
+        for bad_size in (0, -1, True, 1.5):
+            with self.subTest(batch_size=bad_size):
+                with self.assertRaises((TypeError, ValueError)):
+                    list(batch_generator([1], bad_size))
+        with self.assertRaises(TypeError):
+            list(indexed_batch_generator([1], seed=True))
+
+    def test_invalid_rows_and_non_finite_numbers_are_rejected(self):
+        with self.assertRaises(ValueError):
+            expand_camera_samples([("only", "three", "fields")])
+        with self.assertRaises(ValueError):
+            expand_camera_samples([("c", "l", "r", "nan")])
+        with self.assertRaises(ValueError):
+            expand_camera_samples([("c", "l", "r", "0")], correction=float("inf"))
+
 
 if __name__ == "__main__":
     unittest.main()
