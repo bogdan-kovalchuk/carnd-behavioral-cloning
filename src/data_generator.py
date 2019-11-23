@@ -3,6 +3,18 @@
 The functions in this module deliberately stop after one pass.  This makes
 them useful for tests and for callers that want to control epoch boundaries
 without importing the training stack from ``model.py``.
+
+Approach comparison
+-------------------
+``batch_generator`` copies the values into a list and optionally shuffles that
+list.  It takes O(n) extra references and O(n) time, then slices each batch in
+O(batch_size) time.  It is the simplest choice for general iterables.
+
+``indexed_batch_generator`` materializes the source as a tuple, permutes an
+O(n) integer index array, and fetches values lazily per batch.  Its asymptotic
+time and memory costs are also O(n), but the temporary data is numeric indices
+rather than a second rearranged value list.  It is the better fit for
+indexable, array-like sources and makes the access strategy explicit.
 """
 
 from __future__ import annotations
