@@ -15,6 +15,9 @@ class CameraSample:
     camera: str
 
 
+_CAMERA_OFFSETS = {"center": 0.0, "left": 1.0, "right": -1.0}
+
+
 def correct_steering(angle: float, camera: str, correction: float = 0.2) -> float:
     """Apply the conventional steering correction for a camera position."""
 
@@ -27,6 +30,20 @@ def correct_steering(angle: float, camera: str, correction: float = 0.2) -> floa
     if camera == "right":
         return angle - correction
     raise ValueError("camera must be center, left, or right")
+
+
+def correct_steering_lookup(
+    angle: float,
+    camera: str,
+    correction: float = 0.2,
+) -> float:
+    """Apply the same correction through a camera-to-offset lookup table."""
+
+    try:
+        offset = _CAMERA_OFFSETS[camera]
+    except KeyError:
+        raise ValueError("camera must be center, left, or right")
+    return float(angle) + offset * float(correction)
 
 
 def make_camera_samples(

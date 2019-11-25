@@ -1,6 +1,11 @@
 import unittest
 
-from src.camera_samples import CameraSample, correct_steering, make_camera_samples
+from src.camera_samples import (
+    CameraSample,
+    correct_steering,
+    correct_steering_lookup,
+    make_camera_samples,
+)
 
 
 class CameraCorrectionCharacterizationTests(unittest.TestCase):
@@ -26,6 +31,13 @@ class CameraCorrectionCharacterizationTests(unittest.TestCase):
     def test_custom_correction_zero_keeps_all_labels_equal(self):
         self.assertEqual(correct_steering(-0.7, "left", 0), -0.7)
         self.assertEqual(correct_steering(-0.7, "right", 0), -0.7)
+
+    def test_lookup_implementation_matches_branch_implementation(self):
+        for camera in ("center", "left", "right"):
+            self.assertAlmostEqual(
+                correct_steering_lookup(-0.35, camera, 0.27),
+                correct_steering(-0.35, camera, 0.27),
+            )
 
 
 if __name__ == "__main__":
