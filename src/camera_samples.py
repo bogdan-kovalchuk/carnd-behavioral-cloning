@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
+import math
 from typing import Tuple
 
 
@@ -18,11 +19,27 @@ class CameraSample:
 _CAMERA_OFFSETS = {"center": 0.0, "left": 1.0, "right": -1.0}
 
 
+def _validate_correction_inputs(angle: float, camera: str, correction: float):
+    if isinstance(angle, bool) or isinstance(correction, bool):
+        raise TypeError("angle and correction must be numeric")
+    try:
+        angle = float(angle)
+        correction = float(correction)
+    except (TypeError, ValueError):
+        raise TypeError("angle and correction must be numeric")
+    if not math.isfinite(angle) or not math.isfinite(correction):
+        raise ValueError("angle and correction must be finite")
+    if correction < 0:
+        raise ValueError("correction must not be negative")
+    if not isinstance(camera, str) or camera not in _CAMERA_OFFSETS:
+        raise ValueError("camera must be center, left, or right")
+    return angle, correction
+
+
 def correct_steering(angle: float, camera: str, correction: float = 0.2) -> float:
     """Apply the conventional steering correction for a camera position."""
 
-    angle = float(angle)
-    correction = float(correction)
+    angle, correction = _validate_correction_inputs(angle, camera, correction)
     if camera == "center":
         return angle
     if camera == "left":
@@ -39,11 +56,8 @@ def correct_steering_lookup(
 ) -> float:
     """Apply the same correction through a camera-to-offset lookup table."""
 
-    try:
-        offset = _CAMERA_OFFSETS[camera]
-    except KeyError:
-        raise ValueError("camera must be center, left, or right")
-    return float(angle) + offset * float(correction)
+    angle, correction = _validate_correction_inputs(angle, camera, correction)
+    return angle + _CAMERA_OFFSETS[camera] * correction
 
 
 def make_camera_samples(

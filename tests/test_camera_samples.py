@@ -39,6 +39,18 @@ class CameraCorrectionCharacterizationTests(unittest.TestCase):
                 correct_steering(-0.35, camera, 0.27),
             )
 
+    def test_invalid_and_non_finite_inputs_are_rejected_by_both(self):
+        for implementation in (correct_steering, correct_steering_lookup):
+            with self.subTest(implementation=implementation.__name__):
+                with self.assertRaises(ValueError):
+                    implementation(float("nan"), "center")
+                with self.assertRaises(ValueError):
+                    implementation(0.0, "center", -0.1)
+                with self.assertRaises(ValueError):
+                    implementation(0.0, "rear")
+                with self.assertRaises(TypeError):
+                    implementation(True, "center")
+
 
 if __name__ == "__main__":
     unittest.main()
