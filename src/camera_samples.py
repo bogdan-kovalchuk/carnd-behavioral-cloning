@@ -1,4 +1,12 @@
-"""Camera-specific steering-label helpers."""
+"""Camera-specific steering-label helpers.
+
+Both correction functions are constant-time and use constant auxiliary
+memory.  ``correct_steering`` makes the three cases visible as branches,
+which is straightforward to read when only three camera positions exist.
+``correct_steering_lookup`` stores the offsets in a table, so extending the
+camera vocabulary changes data rather than control flow.  The lookup version
+also makes the offset comparison easy to test across implementations.
+"""
 
 from __future__ import annotations
 
