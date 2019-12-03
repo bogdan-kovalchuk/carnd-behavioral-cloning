@@ -2,7 +2,7 @@ import unittest
 
 import numpy as np
 
-from src.augmentation import augment_sample
+from src.augmentation import augment_sample, augment_sample_indexed
 
 
 class AugmentationCharacterizationTests(unittest.TestCase):
@@ -30,6 +30,15 @@ class AugmentationCharacterizationTests(unittest.TestCase):
 
         self.assertEqual(augmented.shape, image.shape)
         self.assertEqual(steering, 0.0)
+
+    def test_indexed_implementation_matches_flip_implementation(self):
+        image = np.arange(24, dtype=np.int16).reshape(2, 4, 3)
+
+        reference = augment_sample(image, 0.6, flip=True)
+        alternative = augment_sample_indexed(image, 0.6, flip=True)
+
+        np.testing.assert_array_equal(alternative[0], reference[0])
+        self.assertEqual(alternative[1], reference[1])
 
 
 if __name__ == "__main__":
