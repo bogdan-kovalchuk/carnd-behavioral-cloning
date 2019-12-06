@@ -40,6 +40,21 @@ class AugmentationCharacterizationTests(unittest.TestCase):
         np.testing.assert_array_equal(alternative[0], reference[0])
         self.assertEqual(alternative[1], reference[1])
 
+    def test_invalid_image_and_label_inputs_are_rejected(self):
+        implementations = (augment_sample, augment_sample_indexed)
+        for implementation in implementations:
+            with self.subTest(implementation=implementation.__name__):
+                with self.assertRaises(ValueError):
+                    implementation(np.zeros((2, 3, 1, 1)), 0.0)
+                with self.assertRaises(TypeError):
+                    implementation(np.zeros((2, 3)), "not-a-number")
+                with self.assertRaises(ValueError):
+                    implementation(np.zeros((2, 3)), float("inf"))
+                with self.assertRaises(TypeError):
+                    implementation(np.zeros((2, 3)), 0.0, flip=1)
+                with self.assertRaises(TypeError):
+                    implementation(np.array([["x"]]), 0.0)
+
 
 if __name__ == "__main__":
     unittest.main()
