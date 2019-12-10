@@ -1,4 +1,12 @@
-"""Deterministic image augmentation primitives."""
+"""Deterministic image augmentation primitives.
+
+``augment_sample`` delegates the horizontal transform to NumPy's view-based
+flip operation and then copies the result, requiring O(H*W*C) time and output
+storage.  ``augment_sample_indexed`` gathers an explicit reversed column
+index array; it has the same asymptotic cost but is useful when augmentation
+is expressed as general axis indexing.  Both approaches preserve the input
+and negate the steering label exactly once when mirroring.
+"""
 
 from __future__ import annotations
 
