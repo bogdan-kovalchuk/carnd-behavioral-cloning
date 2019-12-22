@@ -36,6 +36,14 @@ class TrainingConfig:
         if not isinstance(self.seed, int) or isinstance(self.seed, bool):
             raise TypeError("seed must be an integer")
 
+    @classmethod
+    def from_mapping(cls, values: Mapping) -> "TrainingConfig":
+        """Build the dataclass representation from a field mapping."""
+
+        if not isinstance(values, Mapping):
+            raise TypeError("values must be a mapping")
+        return cls(**dict(values))
+
 
 class MappingTrainingConfig:
     """Alternative immutable configuration backed by a read-only mapping."""
@@ -69,3 +77,20 @@ class MappingTrainingConfig:
 
     def as_mapping(self) -> Mapping:
         return self._values
+
+    def as_training_config(self) -> TrainingConfig:
+        """Convert this representation to the canonical dataclass."""
+
+        return TrainingConfig.from_mapping(self._values)
+
+
+def to_training_config(config) -> TrainingConfig:
+    """Normalize either supported representation to ``TrainingConfig``."""
+
+    if isinstance(config, TrainingConfig):
+        return config
+    if isinstance(config, MappingTrainingConfig):
+        return config.as_training_config()
+    if isinstance(config, Mapping):
+        return TrainingConfig.from_mapping(config)
+    raise TypeError("config must be a TrainingConfig or mapping")

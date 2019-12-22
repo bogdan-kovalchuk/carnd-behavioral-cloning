@@ -1,6 +1,10 @@
 import unittest
 
-from src.training_config import MappingTrainingConfig, TrainingConfig
+from src.training_config import (
+    MappingTrainingConfig,
+    TrainingConfig,
+    to_training_config,
+)
 
 
 class TrainingConfigCharacterizationTests(unittest.TestCase):
@@ -37,6 +41,15 @@ class TrainingConfigCharacterizationTests(unittest.TestCase):
             config.epochs = 3
         with self.assertRaises(TypeError):
             config.as_mapping()["epochs"] = 3
+
+    def test_representations_round_trip_through_adapter(self):
+        values = {"batch_size": 8, "epochs": 2, "seed": 4}
+        mapping_config = MappingTrainingConfig(values)
+        canonical = mapping_config.as_training_config()
+
+        self.assertEqual(TrainingConfig.from_mapping(values), to_training_config(mapping_config))
+        self.assertIs(to_training_config(canonical), canonical)
+        self.assertEqual(to_training_config(values).batch_size, 8)
 
 
 if __name__ == "__main__":
