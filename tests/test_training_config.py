@@ -3,6 +3,7 @@ import unittest
 from src.training_config import (
     MappingTrainingConfig,
     TrainingConfig,
+    configuration_signature,
     to_training_config,
 )
 
@@ -50,6 +51,13 @@ class TrainingConfigCharacterizationTests(unittest.TestCase):
         self.assertEqual(TrainingConfig.from_mapping(values), to_training_config(mapping_config))
         self.assertIs(to_training_config(canonical), canonical)
         self.assertEqual(to_training_config(values).batch_size, 8)
+
+    def test_signature_compares_both_representations(self):
+        dataclass_config = TrainingConfig(batch_size=8, epochs=2)
+        mapping_config = MappingTrainingConfig({"batch_size": 8, "epochs": 2})
+
+        self.assertEqual(configuration_signature(dataclass_config), configuration_signature(mapping_config))
+        self.assertEqual(hash(configuration_signature(mapping_config)), hash(configuration_signature(dataclass_config)))
 
 
 if __name__ == "__main__":

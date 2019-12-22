@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from dataclasses import asdict, dataclass
+from dataclasses import asdict, dataclass, fields
 from types import MappingProxyType
 from typing import Mapping
 
@@ -94,3 +94,10 @@ def to_training_config(config) -> TrainingConfig:
     if isinstance(config, Mapping):
         return TrainingConfig.from_mapping(config)
     raise TypeError("config must be a TrainingConfig or mapping")
+
+
+def configuration_signature(config) -> tuple:
+    """Return a stable, hashable field/value signature for either form."""
+
+    canonical = to_training_config(config)
+    return tuple((field.name, getattr(canonical, field.name)) for field in fields(canonical))
