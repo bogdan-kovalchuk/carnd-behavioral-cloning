@@ -2,7 +2,9 @@
 
 from __future__ import annotations
 
-from dataclasses import dataclass
+from dataclasses import asdict, dataclass
+from types import MappingProxyType
+from typing import Mapping
 
 
 @dataclass(frozen=True)
@@ -33,3 +35,37 @@ class TrainingConfig:
             raise ValueError("steering_correction must not be negative")
         if not isinstance(self.seed, int) or isinstance(self.seed, bool):
             raise TypeError("seed must be an integer")
+
+
+class MappingTrainingConfig:
+    """Alternative immutable configuration backed by a read-only mapping."""
+
+    __slots__ = ("_values",)
+
+    def __init__(self, values: Mapping = None, **overrides) -> None:
+        if values is None:
+            values = {}
+        if not isinstance(values, Mapping):
+            raise TypeError("values must be a mapping")
+        merged = asdict(TrainingConfig())
+        merged.update(values)
+        merged.update(overrides)
+        validated = TrainingConfig(**merged)
+        object.__setattr__(self, "_values", MappingProxyType(asdict(validated)))
+
+    def __setattr__(self, name, value) -> None:
+        if hasattr(self, "_values"):
+            raise AttributeError("MappingTrainingConfig is immutable")
+        object.__setattr__(self, name, value)
+
+    def __getitem__(self, name):
+        return self._values[name]
+
+    def __getattr__(self, name):
+        try:
+            return self._values[name]
+        except KeyError:
+            raise AttributeError(name)
+
+    def as_mapping(self) -> Mapping:
+        return self._values

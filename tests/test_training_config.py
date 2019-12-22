@@ -1,6 +1,6 @@
 import unittest
 
-from src.training_config import TrainingConfig
+from src.training_config import MappingTrainingConfig, TrainingConfig
 
 
 class TrainingConfigCharacterizationTests(unittest.TestCase):
@@ -26,6 +26,17 @@ class TrainingConfigCharacterizationTests(unittest.TestCase):
             TrainingConfig(validation_split=1.0)
         with self.assertRaises(ValueError):
             TrainingConfig(learning_rate=0.0)
+
+    def test_mapping_implementation_matches_values_and_is_immutable(self):
+        config = MappingTrainingConfig({"batch_size": 8, "epochs": 2})
+
+        self.assertEqual(config.batch_size, 8)
+        self.assertEqual(config["epochs"], 2)
+        self.assertEqual(config.validation_split, 0.2)
+        with self.assertRaises(AttributeError):
+            config.epochs = 3
+        with self.assertRaises(TypeError):
+            config.as_mapping()["epochs"] = 3
 
 
 if __name__ == "__main__":
