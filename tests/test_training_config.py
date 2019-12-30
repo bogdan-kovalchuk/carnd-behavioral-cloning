@@ -32,6 +32,16 @@ class TrainingConfigCharacterizationTests(unittest.TestCase):
         with self.assertRaises(ValueError):
             TrainingConfig(learning_rate=0.0)
 
+    def test_non_finite_values_and_boolean_numbers_are_rejected(self):
+        for field in ("validation_split", "learning_rate", "steering_correction"):
+            with self.subTest(field=field):
+                with self.assertRaises(ValueError):
+                    TrainingConfig(**{field: float("nan")})
+        with self.assertRaises(TypeError):
+            TrainingConfig(batch_size=True)
+        with self.assertRaises(TypeError):
+            TrainingConfig(seed=False)
+
     def test_mapping_implementation_matches_values_and_is_immutable(self):
         config = MappingTrainingConfig({"batch_size": 8, "epochs": 2})
 

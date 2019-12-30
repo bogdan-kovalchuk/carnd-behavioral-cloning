@@ -3,8 +3,19 @@
 from __future__ import annotations
 
 from dataclasses import asdict, dataclass, fields
+import math
+from numbers import Integral
 from types import MappingProxyType
 from typing import Mapping
+
+
+def _is_finite_number(value) -> bool:
+    if isinstance(value, bool):
+        return False
+    try:
+        return math.isfinite(float(value))
+    except (TypeError, ValueError):
+        return False
 
 
 @dataclass(frozen=True)
@@ -19,22 +30,30 @@ class TrainingConfig:
     seed: int = 0
 
     def __post_init__(self) -> None:
-        if not isinstance(self.batch_size, int) or isinstance(self.batch_size, bool):
+        if not isinstance(self.batch_size, Integral) or isinstance(self.batch_size, bool):
             raise TypeError("batch_size must be an integer")
         if self.batch_size <= 0:
             raise ValueError("batch_size must be positive")
-        if not isinstance(self.epochs, int) or isinstance(self.epochs, bool):
+        if not isinstance(self.epochs, Integral) or isinstance(self.epochs, bool):
             raise TypeError("epochs must be an integer")
         if self.epochs <= 0:
             raise ValueError("epochs must be positive")
+        if not _is_finite_number(self.validation_split):
+            raise ValueError("validation_split must be finite")
         if not 0 <= self.validation_split < 1:
             raise ValueError("validation_split must be in [0, 1)")
-        if self.learning_rate <= 0:
+        if not _is_finite_number(self.learning_rate) or self.learning_rate <= 0:
             raise ValueError("learning_rate must be positive")
-        if self.steering_correction < 0:
+        if not _is_finite_number(self.steering_correction) or self.steering_correction < 0:
             raise ValueError("steering_correction must not be negative")
-        if not isinstance(self.seed, int) or isinstance(self.seed, bool):
+        if not isinstance(self.seed, Integral) or isinstance(self.seed, bool):
             raise TypeError("seed must be an integer")
+        object.__setattr__(self, "batch_size", int(self.batch_size))
+        object.__setattr__(self, "epochs", int(self.epochs))
+        object.__setattr__(self, "seed", int(self.seed))
+        object.__setattr__(self, "validation_split", float(self.validation_split))
+        object.__setattr__(self, "learning_rate", float(self.learning_rate))
+        object.__setattr__(self, "steering_correction", float(self.steering_correction))
 
     @classmethod
     def from_mapping(cls, values: Mapping) -> "TrainingConfig":
