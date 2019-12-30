@@ -64,6 +64,9 @@ class TrainingConfig:
         return cls(**dict(values))
 
 
+_CONFIG_FIELDS = frozenset(field.name for field in fields(TrainingConfig))
+
+
 class MappingTrainingConfig:
     """Alternative immutable configuration backed by a read-only mapping."""
 
@@ -74,6 +77,9 @@ class MappingTrainingConfig:
             values = {}
         if not isinstance(values, Mapping):
             raise TypeError("values must be a mapping")
+        unknown = (set(values) | set(overrides)) - _CONFIG_FIELDS
+        if unknown:
+            raise ValueError("unknown training fields: {}".format(sorted(unknown)))
         merged = asdict(TrainingConfig())
         merged.update(values)
         merged.update(overrides)

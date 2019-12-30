@@ -42,6 +42,17 @@ class TrainingConfigCharacterizationTests(unittest.TestCase):
         with self.assertRaises(TypeError):
             TrainingConfig(seed=False)
 
+    def test_mapping_rejects_unknown_fields_and_copies_source(self):
+        values = {"batch_size": 8}
+        config = MappingTrainingConfig(values)
+        values["batch_size"] = 32
+
+        self.assertEqual(config.batch_size, 8)
+        with self.assertRaises(ValueError):
+            MappingTrainingConfig({"unexpected": 1})
+        with self.assertRaises(ValueError):
+            MappingTrainingConfig(epochs=2, unexpected=1)
+
     def test_mapping_implementation_matches_values_and_is_immutable(self):
         config = MappingTrainingConfig({"batch_size": 8, "epochs": 2})
 
