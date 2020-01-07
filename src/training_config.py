@@ -1,4 +1,14 @@
-"""Immutable, dependency-free configuration for training experiments."""
+"""Immutable, dependency-free configuration for training experiments.
+
+``TrainingConfig`` uses a frozen dataclass, giving named fields, generated
+comparison, and constant-time field access with O(1) storage for this fixed
+schema.  ``MappingTrainingConfig`` validates the same schema but stores a
+copied ``MappingProxyType``.  Construction is O(k) for k fields and lookup is
+O(1) on the underlying mapping.  The mapping form is convenient for external
+key/value inputs; the dataclass form is clearer for Python callers.  The
+adapter and signature functions make the two alternatives comparable without
+coupling the training runtime to either storage choice.
+"""
 
 from __future__ import annotations
 
