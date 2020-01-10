@@ -68,6 +68,42 @@ class BatchGeneratorCharacterizationTests(unittest.TestCase):
 
         self.assertEqual(alternative, reference)
 
+    def test_implementations_share_partition_invariants(self):
+        for sample_count in range(10):
+            samples = tuple(range(sample_count))
+            for batch_size in (1, 2, 4, 12):
+                for drop_last in (False, True):
+                    with self.subTest(
+                        sample_count=sample_count,
+                        batch_size=batch_size,
+                        drop_last=drop_last,
+                    ):
+                        reference = list(
+                            batch_generator(samples, batch_size, drop_last=drop_last)
+                        )
+                        alternative = list(
+                            indexed_batch_generator(
+                                samples,
+                                batch_size,
+                                drop_last=drop_last,
+                            )
+                        )
+                        self.assertEqual(alternative, reference)
+                        self.assertTrue(
+                            all(len(batch) == batch_size for batch in reference[:-1])
+                        )
+
+    def test_shuffle_preserves_each_sample_exactly_once(self):
+        samples = tuple(range(25))
+
+        for generator in (batch_generator, indexed_batch_generator):
+            with self.subTest(generator=generator.__name__):
+                batches = generator(samples, 6, shuffle=True, seed=23)
+                flattened = [value for batch in batches for value in batch]
+
+                self.assertEqual(len(flattened), len(samples))
+                self.assertEqual(sorted(flattened), list(samples))
+
     def test_invalid_batch_sizes_and_seeds_are_rejected(self):
         for bad_size in (0, -1, True, 1.5):
             with self.subTest(batch_size=bad_size):
